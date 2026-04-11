@@ -753,28 +753,19 @@ function createProject(){
 function deleteProject(){
   if(!_selectedProject)return;
   var name=_selectedProject;
-  window.runtime.MessageDialog({
-    type:'Question',
-    title:'Delete Project',
-    message:'Delete "'+name+'"?\n\nThis removes it from Aisha — it does not delete files on disk.',
-    buttons:['Delete','Cancel'],
-    defaultButton:'Cancel',
-    cancelButton:'Cancel'
-  }).then(function(result){
-    if(result!=='Delete')return;
-    window.go.main.App.DeleteProject(name).then(function(){
-      var idx=PROJECTS.findIndex(function(p){return p.name===name;});
-      if(idx!==-1)PROJECTS.splice(idx,1);
-      var row=document.getElementById('pr-'+name);
-      if(row)row.remove();
-      document.getElementById('net-count').textContent=PROJECTS.length;
-      _selectedProject=null;
-      document.getElementById('detail-empty').style.display='';
-      document.getElementById('detail-content').style.display='none';
-      document.getElementById('settings-empty').style.display='';
-      document.getElementById('settings-content').style.display='none';
-    }).catch(function(e){alert('Delete failed: '+e);});
-  });
+  if(!confirm('Delete "'+name+'"?\n\nThis removes it from Aisha — it does not delete files on disk.'))return;
+  window.go.main.App.DeleteProject(name).then(function(){
+    var idx=PROJECTS.findIndex(function(p){return p.name===name;});
+    if(idx!==-1)PROJECTS.splice(idx,1);
+    var row=document.getElementById('pr-'+name);
+    if(row)row.remove();
+    document.getElementById('net-count').textContent=PROJECTS.length;
+    _selectedProject=null;
+    document.getElementById('detail-empty').style.display='';
+    document.getElementById('detail-content').style.display='none';
+    document.getElementById('settings-empty').style.display='';
+    document.getElementById('settings-content').style.display='none';
+  }).catch(function(e){alert('Delete failed: '+e);});
 }
 
 // ── Output terminal ───────────────────────────────────────────────
