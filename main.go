@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,8 +13,17 @@ import (
 	"syscall"
 	"time"
 
-	webview "github.com/webview/webview_go"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"twisha/internal/config"
+	"twisha/internal/network"
+	"twisha/internal/proxy"
+	"twisha/internal/state"
 )
+
+//go:embed all:frontend
+var assets embed.FS
 
 func main() {
 	// ── Parse flags ──────────────────────────────────────────────────────
@@ -37,10 +47,10 @@ func main() {
 	}
 
 	// ── Load (or seed) config ────────────────────────────────────────────
-	cfg, err := loadConfig(cfgPath)
+	cfg, err := config.Load(cfgPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			def := defaultConfig()
+			def := config.Default()
 			data, _ := json.MarshalIndent(def, "", "  ")
 			_ = os.WriteFile(cfgPath, data, 0644)
 			log.Printf("Created default config at %s", cfgPath)
@@ -56,90 +66,71 @@ func main() {
 		}
 	}
 
-	// ── Build shared state ───────────────────────────────────────────────
-	ip := localIP()
+	// ── Build shared runtime state ───────────────────────────────────────
+	ip := network.LocalIP()
 	log.Printf("Twisha starting on %s (headless=%v)", ip, headless)
 
-	stat := newStatus()
-	trk := newTracker()
-	mac := newMACRules(cfg)
-	arp := newARPCache()
-	pm := newProcManager()
+	stat := state.NewStatus()
+	trk := state.NewTracker()
+	mac := state.NewMACRules(cfg)
+	arp := network.NewARPCache()
+	pm := state.NewProcManager()
 
-	// ── Proxy + admin servers ────────────────────────────────────────────
-	proxy := newProxyHandler(cfg, stat, trk, mac, arp, ip)
-
+	// ── Start proxy server (network-wide, all interfaces) ───────────────
+	ph := proxy.New(cfg, stat, trk, mac, arp, ip)
 	proxySrv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.ProxyPort),
-		Handler: proxy,
+		Handler: ph,
 	}
-	adminSrv := &http.Server{
-		Addr:    fmt.Sprintf("127.0.0.1:%d", cfg.AdminPort),
-		Handler: adminHandler(proxy, cfgPath, stat, trk, mac, pm),
-	}
-
 	go func() {
 		if err := proxySrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("Proxy error: %v", err)
 		}
 	}()
-	go func() {
-		if err := adminSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("Admin error: %v", err)
-		}
-	}()
+	log.Printf("Proxy listening on :%d  (routes *.local → localhost ports)", cfg.ProxyPort)
 
-	log.Printf("Proxy :%d  |  Dashboard http://127.0.0.1:%d", cfg.ProxyPort, cfg.AdminPort)
-
-	// ── Health-probe loop (includes dynamically added projects) ──────────
+	// ── Health-probe loop ────────────────────────────────────────────────
 	for _, p := range cfg.Projects {
-		go stat.probe(p)
+		go stat.Probe(p)
 	}
 	go func() {
 		ticker := time.NewTicker(10 * time.Second)
 		for range ticker.C {
-			for _, p := range proxy.getConfig().Projects {
-				go stat.probe(p)
+			for _, p := range ph.GetConfig().Projects {
+				go stat.Probe(p)
 			}
 		}
 	}()
 
-	// ── Headless daemon mode ─────────────────────────────────────────────
+	// ── Headless daemon mode (no window) ─────────────────────────────────
 	if headless {
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig
-		pm.stopAll()
+		pm.StopAll()
 		log.Println("Twisha shut down.")
 		return
 	}
 
-	// ── Wait for admin server to be ready, then open native window ───────
-	adminAddr := fmt.Sprintf("127.0.0.1:%d", cfg.AdminPort)
-	for i := 0; i < 40; i++ {
-		conn, dialErr := net.DialTimeout("tcp", adminAddr, 100*time.Millisecond)
-		if dialErr == nil {
-			conn.Close()
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
+	// ── Wails desktop window ─────────────────────────────────────────────
+	app := NewApp(ph, cfgPath, stat, trk, mac, pm, ip)
+
+	if err := wails.Run(&options.App{
+		Title:            "Twisha — Local Network Proxy",
+		Width:            1100,
+		Height:           720,
+		MinWidth:         800,
+		MinHeight:        500,
+		DisableResize:    false,
+		Fullscreen:       false,
+		BackgroundColour: &options.RGBA{R: 243, G: 243, B: 243, A: 255},
+		AssetServer: &assetserver.Options{
+			Assets: assets,
+		},
+		OnStartup:  app.startup,
+		OnShutdown: func(_ context.Context) { pm.StopAll() },
+		Bind:       []interface{}{app},
+	}); err != nil {
+		log.Fatalf("Wails error: %v", err)
 	}
-
-	w := webview.New(false)
-	defer w.Destroy()
-	w.SetTitle("Twisha — Local Network Proxy")
-	w.SetSize(1100, 720, webview.HintNone)
-	w.Navigate(fmt.Sprintf("http://127.0.0.1:%d", cfg.AdminPort))
-
-	go func() {
-		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-		<-sig
-		pm.stopAll()
-		w.Terminate()
-	}()
-
-	w.Run() // blocks until the window is closed
-	pm.stopAll()
-	log.Println("Twisha shut down.")
 }

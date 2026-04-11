@@ -101,6 +101,26 @@ func (h *Handler) UpdateProject(name string, port int, command, dir string) bool
 	return false
 }
 
+// DeleteProject removes a project from the live routing table.
+// Returns false when the project name is not found.
+func (h *Handler) DeleteProject(name string) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	key := name + ".local"
+	if _, ok := h.routes[key]; !ok {
+		return false
+	}
+	delete(h.routes, key)
+	delete(h.projects, key)
+	for i, p := range h.cfg.Projects {
+		if p.Name == name {
+			h.cfg.Projects = append(h.cfg.Projects[:i], h.cfg.Projects[i+1:]...)
+			break
+		}
+	}
+	return true
+}
+
 // GetConfig returns a deep copy of the current config.
 func (h *Handler) GetConfig() config.Config {
 	h.mu.RLock()
@@ -132,11 +152,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serverIP := h.ip
 	adminPort := h.cfg.AdminPort
 	h.mu.RUnlock()
+	_ = adminPort // no longer used for a link; kept for future reference
 
 	if !ok {
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, ui.NotFoundPage(host, domains, serverIP))
+		fmt.Fprint(w, ui.NotFoundPage(host, domains))
 		return
 	}
 
