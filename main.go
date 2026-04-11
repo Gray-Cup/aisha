@@ -16,10 +16,10 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"twisha/internal/config"
-	"twisha/internal/network"
-	"twisha/internal/proxy"
-	"twisha/internal/state"
+	"aisha/internal/config"
+	"aisha/internal/network"
+	"aisha/internal/proxy"
+	"aisha/internal/state"
 )
 
 //go:embed all:frontend
@@ -68,7 +68,7 @@ func main() {
 
 	// ── Build shared runtime state ───────────────────────────────────────
 	ip := network.LocalIP()
-	log.Printf("Twisha starting on %s (headless=%v)", ip, headless)
+	log.Printf("Aisha starting on %s (headless=%v)", ip, headless)
 
 	stat := state.NewStatus()
 	trk := state.NewTracker()
@@ -108,7 +108,7 @@ func main() {
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig
 		pm.StopAll()
-		log.Println("Twisha shut down.")
+		log.Println("Aisha shut down.")
 		return
 	}
 
@@ -116,7 +116,7 @@ func main() {
 	app := NewApp(ph, cfgPath, stat, trk, mac, pm, ip)
 
 	if err := wails.Run(&options.App{
-		Title:            "Twisha — Local Network Proxy",
+		Title:            "Aisha — Local Network Proxy",
 		Width:            1100,
 		Height:           720,
 		MinWidth:         800,

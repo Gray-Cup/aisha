@@ -8,10 +8,10 @@ import (
 	"strings"
 	"sync"
 
-	"twisha/internal/config"
-	"twisha/internal/network"
-	"twisha/internal/state"
-	"twisha/internal/ui"
+	"aisha/internal/config"
+	"aisha/internal/network"
+	"aisha/internal/state"
+	"aisha/internal/ui"
 )
 
 // ─────────────────────────────────────────────
@@ -176,6 +176,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.trk.Record(proj.Name, clientIP, clientMAC, r.URL.Path, http.StatusOK)
-	w.Header().Set("X-Proxied-By", "Twisha")
+	w.Header().Set("X-Proxied-By", "Aisha")
 	rp.ServeHTTP(w, r)
 }

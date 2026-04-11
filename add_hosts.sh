@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────
-#  Twisha – Hosts Helper
+#  Aisha – Hosts Helper
 #  Adds .local entries to /etc/hosts on OTHER
 #  devices so they can find your Mac's projects.
 #
@@ -18,7 +18,7 @@ if [ -z "$MAC_IP" ] || [ ${#NAMES[@]} -eq 0 ]; then
   exit 1
 fi
 
-echo "# Twisha – added $(date)" >> /etc/hosts
+echo "# Aisha – added $(date)" >> /etc/hosts
 for name in "${NAMES[@]}"; do
   echo "$MAC_IP    $name.local" >> /etc/hosts
   echo "Added: $MAC_IP  $name.local"

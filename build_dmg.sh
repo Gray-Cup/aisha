@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────
-#  Twisha – build + package as a macOS .dmg
+#  Aisha – build + package as a macOS .dmg
 #
 #  Usage:
 #    bash build_dmg.sh [version]          # e.g. bash build_dmg.sh 1.2.0
@@ -16,9 +16,9 @@ set -euo pipefail
 
 # ── Config ───────────────────────────────────
 VERSION="${1:-1.0.0}"
-APP="twisha"
-BUNDLE_ID="com.twisha.proxy"
-DMG_TITLE="Twisha"
+APP="aisha"
+BUNDLE_ID="com.aisha.proxy"
+DMG_TITLE="Aisha"
 SIGN_ID="${SIGN_ID:-}"
 
 DIST="dist"
@@ -37,7 +37,7 @@ ok()   { printf "  ${GREEN}✓${RESET} %s\n" "$1"; }
 die()  { printf "\n${RED}error:${RESET} %s\n" "$1" >&2; exit 1; }
 
 # ── Pre-flight checks ────────────────────────
-printf "${BOLD}Twisha ${VERSION} — macOS installer build${RESET}\n"
+printf "${BOLD}Aisha ${VERSION} — macOS installer build${RESET}\n"
 printf "${DIM}%s${RESET}\n" "──────────────────────────────────────────"
 
 for tool in go lipo pkgbuild productbuild hdiutil; do
@@ -46,7 +46,7 @@ done
 ok "All required tools present"
 
 if [ ! -f "go.mod" ]; then
-  die "Run this script from the Twisha repo root (go.mod not found)"
+  die "Run this script from the Aisha repo root (go.mod not found)"
 fi
 
 # ── Clean ────────────────────────────────────
@@ -91,20 +91,20 @@ step 2 "Assembling installer payload"
 mkdir -p "$PKG_ROOT/usr/local/bin"
 mkdir -p "$PKG_ROOT/Library/LaunchDaemons"
 
-install -m 755 "$DIST/$APP"           "$PKG_ROOT/usr/local/bin/twisha"
-install -m 644 com.twisha.proxy.plist "$PKG_ROOT/Library/LaunchDaemons/com.twisha.proxy.plist"
+install -m 755 "$DIST/$APP"           "$PKG_ROOT/usr/local/bin/aisha"
+install -m 644 com.aisha.proxy.plist "$PKG_ROOT/Library/LaunchDaemons/com.aisha.proxy.plist"
 
-ok "Payload: /usr/local/bin/twisha  +  /Library/LaunchDaemons/com.twisha.proxy.plist"
+ok "Payload: /usr/local/bin/aisha  +  /Library/LaunchDaemons/com.aisha.proxy.plist"
 
-# ── Twisha.app bundle → /Applications ───────
-APP_BUNDLE="$PKG_ROOT/Applications/Twisha.app/Contents"
+# ── Aisha.app bundle → /Applications ───────
+APP_BUNDLE="$PKG_ROOT/Applications/Aisha.app/Contents"
 mkdir -p "$APP_BUNDLE/MacOS"
 mkdir -p "$APP_BUNDLE/Resources"
 
 # The binary IS the app bundle executable — no shell wrapper, so macOS
 # shows a single icon and associates the window with the .app correctly.
-cp "$DIST/$APP" "$APP_BUNDLE/MacOS/Twisha"
-chmod +x "$APP_BUNDLE/MacOS/Twisha"
+cp "$DIST/$APP" "$APP_BUNDLE/MacOS/Aisha"
+chmod +x "$APP_BUNDLE/MacOS/Aisha"
 
 cat > "$APP_BUNDLE/Info.plist" << INFOPLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -112,17 +112,17 @@ cat > "$APP_BUNDLE/Info.plist" << INFOPLIST
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleExecutable</key>         <string>Twisha</string>
-  <key>CFBundleIdentifier</key>         <string>com.twisha.app</string>
-  <key>CFBundleName</key>               <string>Twisha</string>
-  <key>CFBundleDisplayName</key>        <string>Twisha</string>
+  <key>CFBundleExecutable</key>         <string>Aisha</string>
+  <key>CFBundleIdentifier</key>         <string>com.aisha.app</string>
+  <key>CFBundleName</key>               <string>Aisha</string>
+  <key>CFBundleDisplayName</key>        <string>Aisha</string>
   <key>CFBundleVersion</key>            <string>${VERSION}</string>
   <key>CFBundleShortVersionString</key> <string>${VERSION}</string>
   <key>CFBundlePackageType</key>        <string>APPL</string>
   <key>CFBundleSignature</key>          <string>????</string>
   <key>LSMinimumSystemVersion</key>     <string>10.14</string>
   <key>NSHighResolutionCapable</key>    <true/>
-  <key>NSHumanReadableCopyright</key>   <string>Twisha ${VERSION}</string>
+  <key>NSHumanReadableCopyright</key>   <string>Aisha ${VERSION}</string>
   <!-- Allow WKWebView to load local HTTP content -->
   <key>NSAppTransportSecurity</key>
   <dict>
@@ -132,7 +132,7 @@ cat > "$APP_BUNDLE/Info.plist" << INFOPLIST
 </plist>
 INFOPLIST
 
-ok "App bundle: /Applications/Twisha.app  (native WKWebView window)"
+ok "App bundle: /Applications/Aisha.app  (native WKWebView window)"
 
 # ─────────────────────────────────────────────
 #  3. Pre/postinstall scripts
@@ -144,7 +144,7 @@ mkdir -p "$SCRIPTS_DIR"
 # preinstall – gracefully stop any running daemon before overwriting the binary
 cat > "$SCRIPTS_DIR/preinstall" << 'PREINSTALL'
 #!/bin/bash
-launchctl bootout system/com.twisha.proxy 2>/dev/null || true
+launchctl bootout system/com.aisha.proxy 2>/dev/null || true
 exit 0
 PREINSTALL
 
@@ -154,25 +154,25 @@ cat > "$SCRIPTS_DIR/postinstall" << 'POSTINSTALL'
 set -e
 
 # ── Permissions ──────────────────────────────
-chmod 755 /usr/local/bin/twisha
-chown root:wheel /Library/LaunchDaemons/com.twisha.proxy.plist
-chmod 644 /Library/LaunchDaemons/com.twisha.proxy.plist
-chmod -R 755 /Applications/Twisha.app
-chmod +x /Applications/Twisha.app/Contents/MacOS/Twisha
+chmod 755 /usr/local/bin/aisha
+chown root:wheel /Library/LaunchDaemons/com.aisha.proxy.plist
+chmod 644 /Library/LaunchDaemons/com.aisha.proxy.plist
+chmod -R 755 /Applications/Aisha.app
+chmod +x /Applications/Aisha.app/Contents/MacOS/Aisha
 
 # ── Log files ────────────────────────────────
 mkdir -p /usr/local/var/log
-touch /usr/local/var/log/twisha.log
-touch /usr/local/var/log/twisha-error.log
+touch /usr/local/var/log/aisha.log
+touch /usr/local/var/log/aisha-error.log
 
 # ── Default config (only if not already present) ─
-if [ ! -f /usr/local/etc/twisha/config.json ]; then
-  mkdir -p /usr/local/etc/twisha
-  cat > /usr/local/etc/twisha/config.json << 'CONFIG'
+if [ ! -f /usr/local/etc/aisha/config.json ]; then
+  mkdir -p /usr/local/etc/aisha
+  cat > /usr/local/etc/aisha/config.json << 'CONFIG'
 {
   "proxy_port": 80,
   "admin_port": 9090,
-  "log_file": "/usr/local/var/log/twisha.log",
+  "log_file": "/usr/local/var/log/aisha.log",
   "projects": [
     { "name": "myapp", "port": 3000 },
     { "name": "api",   "port": 8080 }
@@ -182,15 +182,15 @@ CONFIG
 fi
 
 # ── Start daemon ─────────────────────────────
-launchctl bootstrap system /Library/LaunchDaemons/com.twisha.proxy.plist
+launchctl bootstrap system /Library/LaunchDaemons/com.aisha.proxy.plist
 
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "your-mac-ip")
 echo ""
-echo "Twisha is running!"
+echo "Aisha is running!"
 echo ""
 echo "  Dashboard → http://${IP}:9090"
-echo "  Config    → sudo nano /usr/local/etc/twisha/config.json"
-echo "  Logs      → tail -f /usr/local/var/log/twisha.log"
+echo "  Config    → sudo nano /usr/local/etc/aisha/config.json"
+echo "  Logs      → tail -f /usr/local/var/log/aisha.log"
 echo ""
 exit 0
 POSTINSTALL
@@ -258,7 +258,7 @@ printf "\n${BOLD}${GREEN}Done!${RESET}\n\n"
 printf "  %-10s %s\n" "Output:" "$OUTPUT_DMG"
 printf "  %-10s %s\n" "Size:"   "$(du -sh "$OUTPUT_DMG" | cut -f1)"
 printf "\n"
-printf "  Mount the DMG and double-click ${BOLD}Twisha-${VERSION}.pkg${RESET}\n"
+printf "  Mount the DMG and double-click ${BOLD}Aisha-${VERSION}.pkg${RESET}\n"
 printf "  The installer will ask for your admin password\n"
 printf "  (needs root to bind port 80 and register the launchd daemon).\n\n"
 

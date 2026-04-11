@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"twisha/internal/config"
+	"aisha/internal/config"
 )
 
 // ─────────────────────────────────────────────

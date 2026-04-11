@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"twisha/internal/config"
+	"aisha/internal/config"
 )
 
 // ─────────────────────────────────────────────

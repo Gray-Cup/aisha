@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"twisha/internal/config"
-	"twisha/internal/proxy"
-	"twisha/internal/state"
+	"aisha/internal/config"
+	"aisha/internal/proxy"
+	"aisha/internal/state"
 )
 
 // ─────────────────────────────────────────────

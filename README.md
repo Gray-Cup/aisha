@@ -1,4 +1,4 @@
-# 🌊 Twisha
+# 🌊 Aisha
 
 **Expose your localhost projects to every device on your network — via clean `.local` domains.**
 
@@ -6,7 +6,7 @@
 
 ## What it does
 
-Twisha runs as a **background daemon** on your Mac and:
+Aisha runs as a **background daemon** on your Mac and:
 
 - Acts as a **reverse proxy** — maps `myapp.local` → `localhost:3000`
 - Makes your projects reachable from any phone, tablet, or laptop on the same Wi-Fi
@@ -29,14 +29,14 @@ That's it. The daemon is now running.
 ### 2. Edit your projects
 
 ```bash
-sudo nano /usr/local/etc/twisha/config.json
+sudo nano /usr/local/etc/aisha/config.json
 ```
 
 ```json
 {
   "proxy_port": 80,
   "admin_port": 9090,
-  "log_file": "/usr/local/var/log/twisha.log",
+  "log_file": "/usr/local/var/log/aisha.log",
   "projects": [
     { "name": "myapp",     "port": 3000 },
     { "name": "api",       "port": 8080 },
@@ -45,10 +45,10 @@ sudo nano /usr/local/etc/twisha/config.json
 }
 ```
 
-After editing, restart Twisha:
+After editing, restart Aisha:
 
 ```bash
-sudo launchctl kickstart -k system/com.twisha.proxy
+sudo launchctl kickstart -k system/com.aisha.proxy
 ```
 
 ### 3. Access from other devices
@@ -98,12 +98,12 @@ If you don't want to run as root, change `proxy_port` to something like `8888`:
 
 | Action | Command |
 |---|---|
-| Status | `sudo launchctl list \| grep twisha` |
-| Stop | `sudo launchctl bootout system/com.twisha.proxy` |
-| Start | `sudo launchctl bootstrap system /Library/LaunchDaemons/com.twisha.proxy.plist` |
-| Restart | `sudo launchctl kickstart -k system/com.twisha.proxy` |
-| Logs | `tail -f /usr/local/var/log/twisha.log` |
-| Uninstall | `sudo launchctl bootout system/com.twisha.proxy && sudo rm /usr/local/bin/twisha /Library/LaunchDaemons/com.twisha.proxy.plist` |
+| Status | `sudo launchctl list \| grep aisha` |
+| Stop | `sudo launchctl bootout system/com.aisha.proxy` |
+| Start | `sudo launchctl bootstrap system /Library/LaunchDaemons/com.aisha.proxy.plist` |
+| Restart | `sudo launchctl kickstart -k system/com.aisha.proxy` |
+| Logs | `tail -f /usr/local/var/log/aisha.log` |
+| Uninstall | `sudo launchctl bootout system/com.aisha.proxy && sudo rm /usr/local/bin/aisha /Library/LaunchDaemons/com.aisha.proxy.plist` |
 
 ---
 
@@ -111,10 +111,10 @@ If you don't want to run as root, change `proxy_port` to something like `8888`:
 
 | File | Purpose |
 |---|---|
-| `twisha_mac_intel` | Binary for Intel Macs |
-| `twisha_mac_apple_silicon` | Binary for M1/M2/M3/M4 Macs |
+| `aisha_mac_intel` | Binary for Intel Macs |
+| `aisha_mac_apple_silicon` | Binary for M1/M2/M3/M4 Macs |
 | `config.json` | Your projects & ports |
-| `com.twisha.proxy.plist` | macOS daemon definition |
+| `com.aisha.proxy.plist` | macOS daemon definition |
 | `install.sh` | One-command installer |
 | `add_hosts.sh` | Helper for other devices |
 | `main.go` | Full source code |

@@ -15,7 +15,7 @@ func ForbiddenPage(project, clientIP, mac, serverIP string, _ int) string {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Twisha — Access Denied</title>
+<title>Aisha — Access Denied</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -71,7 +71,7 @@ func NotFoundPage(host string, domains []string) string {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Twisha — Not Found</title>
+<title>Aisha — Not Found</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -110,7 +110,7 @@ func NotFoundPage(host string, domains []string) string {
 <div class="card">
   <div class="badge">404 — Unknown Host</div>
   <h1>%s</h1>
-  <p>This domain isn't registered in your Twisha config.</p>
+  <p>This domain isn't registered in your Aisha config.</p>
   <p><strong style="color:#1a1a1a">Available projects:</strong></p>
   <ul>%s</ul>
 </div>

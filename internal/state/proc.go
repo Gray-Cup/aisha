@@ -8,7 +8,7 @@ import (
 	"sync"
 	"syscall"
 
-	"twisha/internal/config"
+	"aisha/internal/config"
 )
 
 // ─────────────────────────────────────────────

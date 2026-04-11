@@ -1,11 +1,11 @@
 {
   "$schema": "https://wails.io/schemas/config.v2.json",
-  "name": "twisha",
-  "outputfilename": "twisha",
+  "name": "aisha",
+  "outputfilename": "aisha",
   "frontend:install": "",
   "frontend:build": "",
   "frontend:dev:watcher": "",
-  "frontend:dev:serverUrl": "auto",
+  "frontend:dev:serverUrl": "",
   "author": {
     "name": "Arjun Aditya",
     "email": ""

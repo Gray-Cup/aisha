@@ -31,7 +31,7 @@ type Config struct {
 
 func Default() Config {
 	return Config{
-		ProxyPort: 80,
+		ProxyPort: 8080,
 		AdminPort: 9090,
 		Projects: []Project{
 			{Name: "myapp", Port: 3000, Command: "npm run dev"},
@@ -50,7 +50,7 @@ func Load(path string) (Config, error) {
 		return cfg, fmt.Errorf("invalid config JSON: %w", err)
 	}
 	if cfg.ProxyPort == 0 {
-		cfg.ProxyPort = 80
+		cfg.ProxyPort = 8080
 	}
 	if cfg.AdminPort == 0 {
 		cfg.AdminPort = 9090

@@ -1,0 +1,17 @@
+{
+  "projects": [
+    {
+      "name": "myapp",
+      "port": 2001,
+      "command": "npm run dev"
+    },
+    {
+      "name": "api",
+      "port": 8080,
+      "command": "go run main.go"
+    }
+  ],
+  "proxy_port": 8080,
+  "admin_port": 9090,
+  "log_file": ""
+}

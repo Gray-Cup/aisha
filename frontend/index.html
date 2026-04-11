@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Twisha</title>
+<title>Aisha</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -314,7 +314,7 @@ input[type="number"] { -moz-appearance: textfield; }
 <body>
 
 <div class="titlebar">
-  <div class="titlebar-logo">Twisha</div>
+  <div class="titlebar-logo">Aisha</div>
   <div class="titlebar-sep"></div>
   <div class="titlebar-meta">Local Network Proxy</div>
   <div class="titlebar-actions">
@@ -372,7 +372,7 @@ input[type="number"] { -moz-appearance: textfield; }
       <div class="overlay-header">
         <div>
           <div class="overlay-title-label">New Project</div>
-          <div class="overlay-title">Add to Twisha</div>
+          <div class="overlay-title">Add to Aisha</div>
         </div>
         <button class="overlay-close" onclick="hideNewProjPanel()">&#x2715;</button>
       </div>
@@ -743,7 +743,7 @@ function createProject(){
 // ── Delete project ────────────────────────────────────────────────
 function deleteProject(){
   if(!_selectedProject)return;
-  if(!confirm('Delete "'+_selectedProject+'"?\n\nThis removes it from Twisha \u2014 it does not delete files on disk.'))return;
+  if(!confirm('Delete "'+_selectedProject+'"?\n\nThis removes it from Aisha \u2014 it does not delete files on disk.'))return;
   window.go.main.App.DeleteProject(_selectedProject).then(function(){
     var idx=PROJECTS.findIndex(function(p){return p.name===_selectedProject;});
     if(idx!==-1)PROJECTS.splice(idx,1);
