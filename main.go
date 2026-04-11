@@ -76,34 +76,39 @@ func main() {
 	arp := network.NewARPCache()
 	pm := state.NewProcManager()
 
-	// ── Start proxy server (network-wide, all interfaces) ───────────────
+	// ── Build proxy (routes not live yet) ───────────────────────────────
 	ph := proxy.New(cfg, stat, trk, mac, arp, ip)
 	proxySrv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.ProxyPort),
 		Handler: ph,
 	}
-	go func() {
-		if err := proxySrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("Proxy error: %v", err)
-		}
-	}()
-	log.Printf("Proxy listening on :%d  (routes *.local → localhost ports)", cfg.ProxyPort)
 
-	// ── Health-probe loop ────────────────────────────────────────────────
-	for _, p := range cfg.Projects {
-		go stat.Probe(p)
-	}
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		for range ticker.C {
-			for _, p := range ph.GetConfig().Projects {
-				go stat.Probe(p)
+	// startNetwork binds the proxy and starts health probes.
+	// Deferred until OnStartup so Wails binding-generation passes never
+	// touch the port — they skip OnStartup entirely.
+	startNetwork := func() {
+		go func() {
+			log.Printf("Proxy listening on :%d  (routes *.local → localhost ports)", cfg.ProxyPort)
+			if err := proxySrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Printf("Proxy error: %v", err)
 			}
+		}()
+		for _, p := range cfg.Projects {
+			go stat.Probe(p)
 		}
-	}()
+		go func() {
+			ticker := time.NewTicker(10 * time.Second)
+			for range ticker.C {
+				for _, p := range ph.GetConfig().Projects {
+					go stat.Probe(p)
+				}
+			}
+		}()
+	}
 
 	// ── Headless daemon mode (no window) ─────────────────────────────────
 	if headless {
+		startNetwork()
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig
@@ -127,7 +132,10 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup:  app.startup,
+		OnStartup: func(ctx context.Context) {
+			app.startup(ctx)
+			startNetwork() // only runs when real window opens, skipped during binding gen
+		},
 		OnShutdown: func(_ context.Context) { pm.StopAll() },
 		Bind:       []interface{}{app},
 	}); err != nil {

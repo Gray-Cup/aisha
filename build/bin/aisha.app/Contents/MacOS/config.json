@@ -1,0 +1,28 @@
+{
+  "projects": [
+    {
+      "name": "myapp",
+      "port": 3000,
+      "command": "npm run dev"
+    },
+    {
+      "name": "api",
+      "port": 8080,
+      "command": "go run main.go"
+    },
+    {
+      "name": "whatsapp",
+      "port": 6979,
+      "command": "go run .",
+      "dir": "/Users/graycup/Documents/GitHub/whatsapp-api-message-sender"
+    },
+    {
+      "name": "tester",
+      "port": 3000,
+      "dir": "/Users/graycup/Downloads/localwave"
+    }
+  ],
+  "proxy_port": 8080,
+  "admin_port": 9090,
+  "log_file": ""
+}

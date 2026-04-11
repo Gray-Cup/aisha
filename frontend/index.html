@@ -53,7 +53,7 @@ body {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 0 12px 0 80px;
+  padding: 0 12px;
   gap: 8px;
   flex-shrink: 0;
   -webkit-app-region: drag;
@@ -516,13 +516,18 @@ input[type="number"] { -moz-appearance: textfield; }
             <div class="card-header">Network Access</div>
             <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
               <div class="settings-row">
-                <div class="settings-label">Local Domain</div>
-                <div class="settings-val" id="set-net-domain">&#x2013;</div>
+                <div class="settings-label">URL</div>
+                <div class="settings-val" id="set-net-domain" style="cursor:pointer" title="Click to copy" onclick="copyText(this.textContent)">&#x2013;</div>
+              </div>
+              <div class="settings-row">
+                <div class="settings-label">This Mac</div>
+                <div class="settings-val" id="set-hosts-this" style="cursor:pointer;font-size:11px;word-break:break-all" title="Click to copy" onclick="copyText(this.textContent)">&#x2013;</div>
+                <div class="form-hint">Add to <code>/etc/hosts</code> on <strong>this Mac</strong> so <code>name.local</code> resolves here</div>
               </div>
               <div class="settings-row">
                 <div class="settings-label">Other Devices</div>
                 <div class="settings-val" id="set-hosts-entry" style="cursor:pointer;font-size:11px;word-break:break-all" title="Click to copy" onclick="copyHostsEntry()">&#x2013;</div>
-                <div class="form-hint">Add the line above to <code>/etc/hosts</code> on each device &#x00B7; click to copy</div>
+                <div class="form-hint">Add to <code>/etc/hosts</code> on each device &#x00B7; click to copy</div>
               </div>
             </div>
           </div>
@@ -570,7 +575,7 @@ input[type="number"] { -moz-appearance: textfield; }
 </div>
 
 <script>
-var PROJECTS = [], SERVER_IP = '';
+var PROJECTS = [], SERVER_IP = '', SERVER_PORT = 8080;
 var _macData={}, _currentProject=null, _currentMACs=[], _selectedProject=null, _statusData=[], _outputLines=[];
 
 // ── Init ─────────────────────────────────────────────────────────
@@ -584,6 +589,7 @@ function init(){
 
   window.go.main.App.GetServerInfo().then(function(info){
     SERVER_IP = info.ip;
+    SERVER_PORT = info.proxy_port;
     document.getElementById('net-ip').textContent = info.ip;
     document.getElementById('net-proxy').textContent = ':' + info.proxy_port;
     document.getElementById('sb-proxy').textContent = 'proxy :' + info.proxy_port;
@@ -626,7 +632,8 @@ function selectProject(name){
   document.getElementById('detail-empty').style.display='none';
   var c=document.getElementById('detail-content'); c.style.display='flex';
   document.getElementById('det-name').textContent=p.name;
-  document.getElementById('det-sub').textContent='http://'+p.name+'.local';
+  var portSuffix=SERVER_PORT===80?'':':'+SERVER_PORT;
+  document.getElementById('det-sub').textContent='http://'+p.name+'.local'+portSuffix;
   document.getElementById('det-port').textContent=':'+p.port;
   document.getElementById('det-cmd-input').value=p.command||'';
   document.getElementById('det-dir-input').value=p.dir||'';
@@ -640,7 +647,9 @@ function selectProject(name){
   document.getElementById('set-cmd').value=p.command||'';
   document.getElementById('set-dir').value=p.dir||'';
   document.getElementById('settings-msg').style.display='none';
-  document.getElementById('set-net-domain').textContent='http://'+p.name+'.local';
+  var portSuffix=SERVER_PORT===80?'':':'+SERVER_PORT;
+  document.getElementById('set-net-domain').textContent='http://'+p.name+'.local'+portSuffix;
+  document.getElementById('set-hosts-this').textContent='127.0.0.1    '+p.name+'.local';
   document.getElementById('set-hosts-entry').textContent=SERVER_IP+'    '+p.name+'.local';
   document.getElementById('set-hosts-entry').style.color='';
   updateDetailStatus(name);
@@ -743,26 +752,40 @@ function createProject(){
 // ── Delete project ────────────────────────────────────────────────
 function deleteProject(){
   if(!_selectedProject)return;
-  if(!confirm('Delete "'+_selectedProject+'"?\n\nThis removes it from Aisha \u2014 it does not delete files on disk.'))return;
-  window.go.main.App.DeleteProject(_selectedProject).then(function(){
-    var idx=PROJECTS.findIndex(function(p){return p.name===_selectedProject;});
-    if(idx!==-1)PROJECTS.splice(idx,1);
-    var row=document.getElementById('pr-'+_selectedProject);
-    if(row)row.remove();
-    document.getElementById('net-count').textContent=PROJECTS.length;
-    _selectedProject=null;
-    document.getElementById('detail-empty').style.display='';
-    document.getElementById('detail-content').style.display='none';
-    document.getElementById('settings-empty').style.display='';
-    document.getElementById('settings-content').style.display='none';
-  }).catch(function(e){alert('Delete failed: '+e);});
+  var name=_selectedProject;
+  window.runtime.MessageDialog({
+    type:'Question',
+    title:'Delete Project',
+    message:'Delete "'+name+'"?\n\nThis removes it from Aisha — it does not delete files on disk.',
+    buttons:['Delete','Cancel'],
+    defaultButton:'Cancel',
+    cancelButton:'Cancel'
+  }).then(function(result){
+    if(result!=='Delete')return;
+    window.go.main.App.DeleteProject(name).then(function(){
+      var idx=PROJECTS.findIndex(function(p){return p.name===name;});
+      if(idx!==-1)PROJECTS.splice(idx,1);
+      var row=document.getElementById('pr-'+name);
+      if(row)row.remove();
+      document.getElementById('net-count').textContent=PROJECTS.length;
+      _selectedProject=null;
+      document.getElementById('detail-empty').style.display='';
+      document.getElementById('detail-content').style.display='none';
+      document.getElementById('settings-empty').style.display='';
+      document.getElementById('settings-content').style.display='none';
+    }).catch(function(e){alert('Delete failed: '+e);});
+  });
 }
 
 // ── Output terminal ───────────────────────────────────────────────
 function fetchOutput(name){
   if(!name)return;
   window.go.main.App.GetOutput(name).then(function(lines){
-    if(!lines||!lines.length)return;
+    if(!lines||!lines.length){
+      clearOutput();
+      document.getElementById('term-pane').style.display='none';
+      return;
+    }
     document.getElementById('term-pane').style.display='flex';
     _outputLines=lines; renderOutput();
   }).catch(function(){});
@@ -868,6 +891,10 @@ function saveMACs(){
 }
 
 // ── Network access helpers ────────────────────────────────────────
+function copyText(text){
+  if(!text||text==='–')return;
+  navigator.clipboard.writeText(text).catch(function(){});
+}
 function copyHostsEntry(){
   var el=document.getElementById('set-hosts-entry');
   if(!el||!el.textContent)return;
