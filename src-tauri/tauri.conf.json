@@ -1,0 +1,59 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeDevCommand": "cd ../frontend && npm run dev",
+    "beforeBuildCommand": "cd ../frontend && npm run build",
+    "devPath": "http://localhost:5173",
+    "distDir": "../frontend/dist",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "Aisha",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "sidecar": true,
+        "open": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "category": "DeveloperTool",
+      "externalBin": ["binaries/aisha-backend"],
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "identifier": "com.aisha.app",
+      "targets": "all",
+      "macOS": {
+        "entitlements": null,
+        "frameworks": [],
+        "signingIdentity": null
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 820,
+        "resizable": true,
+        "title": "Aisha",
+        "width": 1280,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ]
+  }
+}
